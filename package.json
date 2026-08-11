@@ -1,11 +1,49 @@
 {
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "packageManager": "pnpm@11.21.0",
+  "engines": {
+    "node": ">=22.x"
+  },
   "scripts": {
-    "start": "nodemon index.js"
+    "dev": "cross-env MODE=dev nodemon",
+    "start": "cross-env MODE=prod node dist/index.js",
+    "build": "tsc && tsc-alias --resolve-full-paths",
+    "clear": "rm -rf dist"
+  },
+  "imports": {
+    "#/*": "./src/*"
   },
   "dependencies": {
-    "express": "^4.22.1"
+    "express": "^5.2.1",
+    "cors": "^2.8.6",
+    "cross-env": "^10.1.0",
+    "csrf-sync": "^4.2.1",
+    "dotenv": "^17.4.2",
+    "express-session": "^1.19.0",
+    "express-zod-safe": "^3.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mime-types": "^3.0.2",
+    "morgan": "^1.11.0",
+    "multer": "^2.2.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0"
+    "@types/express": "^5.0.6",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/mime-types": "^3.0.1",
+    "@types/morgan": "^1.9.10",
+    "@types/multer": "^2.2.0",
+    "@types/express-serve-static-core": "^5.1.3",
+    "@types/express-session": "^1.19.0",
+    "nodemon": "^3.1.14",
+    "ts-node": "^10.9.2",
+    "tsc-alias": "^1.9.1",
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2"
   }
 }

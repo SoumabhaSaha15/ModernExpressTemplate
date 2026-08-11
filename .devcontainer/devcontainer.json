@@ -4,15 +4,15 @@
     "cpus": 4
   },
   "waitFor": "onCreateCommand",
-  "updateContentCommand": "npm install",
+  "updateContentCommand": "pnpm install",
   "postCreateCommand": "",
   "postAttachCommand": {
-    "server": "npm start"
+    "server": "pnpm dev"
   },
   "customizations": {
     "codespaces": {
       "openFiles": [
-        "index.js"
+        "./src/index.ts"
       ]
     }
   },
@@ -22,5 +22,7 @@
       "onAutoForward": "openPreview"
     }
   },
-  "forwardPorts": [3000]
+  "forwardPorts": [
+    3000
+  ]
 }
