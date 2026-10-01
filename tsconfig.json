@@ -19,6 +19,7 @@
     "declaration": false,
   },
   "include": [
-    "./src/**/*"
+    "./src/**/*",
+    "./types"
   ]
 }

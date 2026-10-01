@@ -1,2 +1,6 @@
 allowBuilds:
   esbuild: true
+minimumReleaseAgeExclude:
+  - dotenv@18.0.5
+  - tsc-alias@1.9.7
+  - globals@17.13.0

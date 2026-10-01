@@ -1,7 +1,0 @@
-{
-    "watch": [
-        "src"
-    ],
-    "exec": "tsx --inspect src/index.ts",
-    "ext": "ts,json"
-}
