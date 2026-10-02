@@ -1,179 +1,334 @@
-# Modern Express Template
+# ModernExpressTemplate
 
-A modern Express.js starter template built with TypeScript, MongoDB/Mongoose, and a production-ready foundation for `MERN`/`MEAN` stack or any frontend (eg:svelte,solid,vue etc) .
+A production-minded **Express 5 + TypeScript + MongoDB** starter for Node.js 22+, wired up with the pieces a real API needs on day one: end-to-end type-safe environment validation, Zod-powered request validation, auto-generated OpenAPI/Swagger docs, MongoDB-backed sessions, CSRF protection, and a clean layered folder structure — all running as native ES modules. Suitable for **React, Angular, Svelte, Vue ...** or any frontend framework just build and paste the output in the **`./public`** directory and see the magic.
 
-This project is preconfigured with environment validation, session management, CSRF protection, MongoDB session storage, CORS, static asset serving, and a clean route layout.
+Stop re-assembling the same boilerplate. Clone this, drop in your `.env`, and start writing routes.
 
-## Features
+---
+> # Tech-stack
+> ![tech](./public/image.png)
+---
 
-- Express.js v5 with TypeScript
-- Node.js 22+ compatible setup
-- MongoDB connection via Mongoose
-- Express session storage using MongoDB (`connect-mongo`)
-- CSRF token generation and protection
-- CORS enabled for configured origins
-- JSON and URL-encoded body parsing
-- Cookie parsing
-- Validation-first environment handling with Zod and `@t3-oss/env-core`
-- Static file hosting from the `public` directory
-- ESLint configuration for code quality
+## Table of contents
 
-## Tech Stack
+- [Why this template](#why-this-template)
+- [Tech stack](#tech-stack)
+- [Requirements](#requirements)
+- [Quick start](#quick-start)
+- [Environment variables](#environment-variables)
+- [npm scripts](#npm-scripts)
+- [Project structure](#project-structure)
+- [How it works](#how-it-works)
+  - [The request lifecycle](#the-request-lifecycle)
+  - [Path aliases](#path-aliases)
+  - [CSRF protection](#csrf-protection)
+  - [Sessions](#sessions)
+  - [Error handling](#error-handling)
+- [API documentation](#api-documentation)
+- [Adding a new route](#adding-a-new-route)
+- [File uploads](#file-uploads)
+- [Production notes](#production-notes)
+- [Notes and gotchas](#notes-and-gotchas)
 
-- Node.js
-- Express
-- TypeScript
-- MongoDB + Mongoose
-- Zod
-- dotenv
-- Express Session
-- CSRF Sync
-- ESLint
-- pnpm
+---
 
-## Prerequisites
+## Why this template
 
-Before running the project, make sure you have:
+Most Express starters give you an `app.js` and a prayer. This one ships the infrastructure decisions already made:
 
-- Node.js 22 or newer
-- pnpm installed globally
-- MongoDB instance or MongoDB Atlas connection string
+- **Type-safe config** — environment variables are parsed and validated with Zod at boot. The app refuses to start on a bad config instead of failing mysteriously at runtime.
+- **Validation that doubles as documentation** — one Zod schema can validate a request *and* generate the OpenAPI spec. No hand-maintained Swagger YAML to drift out of sync.
+- **Secure-by-default** — CSRF synchronised-token protection and server-side sessions stored in MongoDB are wired in from the first request.
+- **Native ESM with sane imports** — `#/…` path aliases work in both `tsx` (dev) and compiled `node` (production).
+- **Graceful shutdown** — `SIGINT` closes the DB connection and the HTTP server cleanly.
 
-## Installation
+---
 
-1. Clone the repository
-2. Install dependencies:
+## Tech stack
+
+| Concern | Choice |
+| --- | --- |
+| Runtime | Node.js 22+ |
+| Language | TypeScript 6 (`strict`, ESNext, native ESM) |
+| Framework | Express 5 |
+| Database | MongoDB via Mongoose 9 (`mongodb` driver 7) |
+| Validation | Zod 4 |
+| API docs | `@asteasolutions/zod-to-openapi` + `swagger-ui-express` (+ `swagger-themes`) |
+| Config | `@t3-oss/env-core` + `dotenv` |
+| Sessions | `express-session` + `connect-mongo` (MongoDB store) |
+| CSRF | `csrf-sync` |
+| File uploads | `multer` (memory storage, 1 MB cap) |
+| Logging | `morgan` (HTTP) + `chalk` / `boxen` (startup banner) |
+| Linting | ESLint 10 (flat config) + `typescript-eslint` |
+| Package manager | pnpm 12 |
+| Dev runner | `tsx` (watch + inspector) |
+
+---
+
+## Requirements
+
+- **Node.js >= 22** (enforced via `engines` in `package.json`)
+- **pnpm 12** (declared via `packageManager`)
+- A **MongoDB** instance — local or MongoDB Atlas (a `mongodb://` / `mongodb+srv://` connection string)
+
+---
+
+## Quick start
 
 ```bash
+# 1. Install dependencies
 pnpm install
-```
 
-## Environment Variables
+# 2. Create your environment file (see the table below)
+cp .env.example .env   # then fill in the values
 
-Create a `.env` file in the project root with the required variables: [CORS url is provided based on vites default port.]
-
-```env
-  PORT=3000
-  DB_URI=mongodb://localhost:27017/mydb
-  JWT_KEY=X9ir9t83NPN5R8tQjSCpZKIT9JI8aJ79
-  CORS_URL=http://localhost:5173
-```
-
-### Variable Descriptions
-
-- `NODE_ENV`: Runtime environment (`development`, `production`, or `test`) [injected via pnpm]
-- `PORT`: Port where the server listens
-- `JWT_KEY`: Secret used for session signing and security-related tokens
-- `CORS_URL`: Allowed origin for CORS requests
-- `DB_URI`: MongoDB connection URI
-
-> The app validates these values at startup using Zod, so invalid environment values will fail fast.
-
-## Available Scripts
-
-```bash
+# 3. Run in watch mode with the Node inspector attached
 pnpm dev
 ```
 
-Starts the app in development mode with file watching enabled.
+The server boots and prints a startup banner:
 
-```bash
-pnpm build
+```
+ ╭─────────────────────────────────────────╮
+ │                                         │
+ │  EXPRESS SERVER READY (v5.x)            │
+ │                                         │
+ │    ➜ Local:    http://localhost:3000   │
+ │    ➜ Network:  http://127.0.0.1:3000   │
+ │                                         │
+ │    Ready to accept connections          │
+ │                                         │
+ ╰─────────────────────────────────────────╯
 ```
 
-Compiles the TypeScript source into the `dist` output directory.
+In development, interactive API docs are available at **http://localhost:3000/docs**.
 
-```bash
-pnpm start
+---
+
+## Environment variables
+
+Create a `.env` at the project root. The app validates these at startup and **exits immediately if any are missing or malformed**.
+
+| Variable | Required | Type / rule | Default | Notes |
+| --- | --- | --- | --- | --- |
+| `NODE_ENV` | No | `development` \| `production` \| `test` | `development` | Switches static serving and docs behaviour. **Set by the npm scripts via `cross-env`, not from `.env`** (see below) |
+| `PORT` | No | number | `3000` | Coerced from string |
+| `JWT_KEY` | **Yes** | string, min 32 chars | — | Also used as the session secret |
+| `CORS_URL` | **Yes** | valid URL | — | The single allowed CORS origin (credentials enabled) |
+| `DB_URI` | **Yes** | URL starting with `mongodb` | — | MongoDB connection string |
+
+Example `.env`:
+
+```dotenv
+NODE_ENV=development
+PORT=3000
+JWT_KEY=X9ir9t83NPN5R8tQjSCpZKIT9JI8aJ79
+CORS_URL=http://localhost:5173
+DB_URI=mongodb://127.0.0.1:27017/modern-express
 ```
 
-Runs the built app in production mode.
+**A note on `NODE_ENV`:** it is not read from `.env`. The `dev` and `start` scripts inject it directly on the command line with `cross-env` (`cross-env NODE_ENV=development …` / `cross-env NODE_ENV=production …`). Because `dotenv.config()` never overwrites a variable that is already set in the process environment, the script-provided value always wins. So you control the mode by choosing the script (`pnpm dev` vs `pnpm start`), not by editing `.env` — the line is shown above only for completeness.
 
-```bash
-pnpm lint
+> Using MongoDB Atlas and hitting a `querySrv` resolution error? `src/index.ts` contains a commented-out `dns.setServers([...])` line — uncomment it to route DNS through Google's public resolvers.
+
+---
+
+## npm scripts
+
+| Script | Command | Purpose |
+| --- | --- | --- |
+| `pnpm dev` | `cross-env NODE_ENV=development tsx watch --inspect src/index.ts` | Hot-reloading dev server with the Node inspector |
+| `pnpm build` | `tsc && tsc-alias --resolve-full-paths` | Compile to `dist/` and rewrite `#/` aliases |
+| `pnpm start` | `cross-env NODE_ENV=production node dist/index.js` | Run the compiled production build |
+| `pnpm clear` | `rm -rf dist` | Remove build output |
+| `pnpm lint` | `eslint .` | Lint the codebase |
+| `pnpm lint:fix` | `eslint . --fix` | Lint and auto-fix |
+
+---
+
+## Project structure
+
 ```
-
-Runs ESLint across the project.
-
-```bash
-pnpm lint:fix
-```
-
-Automatically fixes lint issues where possible.
-
-## Project Structure
-
-```text
-.
-├── public/ [in production you just build your frontend app and paste thoss files in this directory]
-│   └── some-text.txt
+ModernExpressTemplate/
+├── public/
+│   └── index.html              # Static SPA shell served in production
 ├── src/
 │   ├── configurations/
-│   │   ├── csrf.ts
-│   │   ├── env.ts
-│   │   ├── handle-error.ts
-│   │   ├── muletr.ts
-│   │   └── session.ts
+│   │   ├── csrf.ts             # CSRF token generation + synchronised protection
+│   │   ├── env.ts              # Zod-validated, typed environment config
+│   │   ├── handle-error.ts     # Central error-handling middleware
+│   │   ├── muletr.ts           # Multer upload config (memory storage, 1 MB limit)
+│   │   ├── open-api-docs.ts    # OpenAPI registry + spec builder
+│   │   └── session.ts          # express-session + MongoDB store
 │   ├── router/
-│   │   └── index.ts
+│   │   ├── index.ts            # Root router: morgan logging + mounts sub-routers
+│   │   └── user/
+│   │       ├── index.ts        # Binds /user paths to handlers
+│   │       └── get.ts          # GET /user handler + its OpenAPI registration
 │   ├── utility/
-│   │   └── listener.ts
-│   └── index.ts
+│   │   └── listener.ts         # Server "ready" banner + unhandled-rejection hook
+│   └── index.ts                # App bootstrap: DB connect, middleware, listen, shutdown
 ├── types/
-│   └── ENV.d.ts
-├── eslint.config.js
-├── nodemon.json
-├── package.json
-├── pnpm-lock.yaml
-├── pnpm-workspace.yaml
-├── tsconfig.json
-└── README.md
+│   └── express.d.ts            # Express Request augmentation (csrfToken)
+├── eslint.config.ts            # ESLint flat config
+├── tsconfig.json               # App TS config + #/ path alias
+├── tsconfig.node.json          # TS config for config files
+└── package.json
 ```
 
-## Running the App
+---
 
-For development:
+## How it works
 
-```bash
-pnpm dev
-```
+### The request lifecycle
 
-The server will start and listen on the configured port, usually:
+Middleware is applied in a deliberate order in `src/index.ts`:
 
-```text
-http://localhost:3000
-```
+1. **CORS** — single origin from `CORS_URL`, with `credentials: true`.
+2. **Static files** — `public/` is served. In production it serves `index.html` at `/`; in development `index: false` so the docs route can take precedence.
+3. **Body parsers** — `express.json()` and `express.urlencoded({ extended: true })`.
+4. **Cookie parser** — makes `req.cookies` available (needed by CSRF).
+5. **Session** — `express-session` backed by MongoDB.
+6. **CSRF token middleware** — issues a token and sets the `csrftoken` cookie on every request.
+7. **CSRF protection** — rejects unsafe requests that lack a valid token.
+8. **Routing** — in production the router is mounted at `/api`; in development it is mounted at the root and the Swagger UI is served at `/docs`.
+9. **Error handler** — the final middleware, normalising all thrown errors.
 
-## Basic Route Example
+### Path aliases
 
-The default router contains a simple health route:
+Imports use the `#/` prefix instead of long relative paths:
 
 ```ts
-router.get('/api', (_, res) => {
-  res.send('Hello World!');
-});
+import env from "#/configurations/env";
+import router from "#/router/index";
 ```
 
-You can extend this route file in `src/router/index.ts` to add your application endpoints.
+This works in **both** environments through three coordinated settings:
 
-## Notes
+- `tsconfig.json` → `paths: { "#/*": ["./src/*"] }` (for `tsx` and the TS compiler)
+- `package.json` → `imports: { "#/*": "./dist/*" }` (for the compiled runtime)
+- `tsc-alias` in the build script rewrites aliases in the emitted JS
 
-- Production mode serves static frontend files from `public` and exposes API routes under `/api`.
-- Development mode mounts the router directly for local API testing.
-- Sessions are stored in MongoDB, which is useful for multi-instance deployments.
-- CSRF protection is enabled through a cookie-based token strategy.
+### CSRF protection
 
-## License
+`csrf-sync` issues a token per request. `csrfTokenMiddleware` writes it to a `csrftoken` cookie (`sameSite: lax`), and clients must echo it back in the **`x-csrf-token`** header on state-changing requests. The scheme is registered globally in the OpenAPI spec so it appears in Swagger UI.
 
-This project is provided as a starter template for learning and building Express-based applications. Update the license as needed for your own project.
+### Sessions
 
-## Next Steps
+Sessions are persisted in MongoDB via `connect-mongo` (collection `sessions`, 7-day TTL, native auto-removal). The cookie is `httpOnly` with a 1-day max age, and the session secret is reused from `JWT_KEY`. Session data lives server-side, so restarting the app doesn't log users out.
 
-You can customize it by:
+### Error handling
 
-- adding your own controllers and services
-- creating database models
-- splitting routes into modules
-- connecting a frontend framework
-- securing your API with auth and authorization rules
+`src/configurations/handle-error.ts` is the single place errors are turned into responses:
 
+| Thrown error | Status | Response shape |
+| --- | --- | --- |
+| `ZodError` | `400` | `{ code, message: "Validation error", details }` (pretty-printed) |
+| `MongoServerError` | `400` | `{ code, message: "Database error", details }` |
+| Anything else | `500` | `{ code, message, details: "Internal server error" }` |
+
+Throw errors anywhere (or via `next(err)`) and they surface here in a consistent format.
+
+---
+
+## API documentation
+
+In development, the OpenAPI 3.0 spec is generated **from your Zod schemas** — no separate spec file to maintain.
+
+- **Swagger UI:** `GET /docs` (Material theme, with the explorer enabled)
+- **Raw spec JSON:** `GET /docs.json`
+
+The generator lives in `src/configurations/open-api-docs.ts` and exposes a shared `registry`. Register schemas with `registry.register(...)` and paths with `registry.registerPath(...)` right next to the handler they describe, so docs and code never drift apart.
+
+Docs are **development-only** — they are not mounted when `NODE_ENV=production`.
+
+---
+
+## Adding a new route
+
+The pattern used by the sample `/user` endpoint:
+
+```ts
+// src/router/user/get.ts
+import { z } from "zod";
+import type { Request, Response } from "express";
+import { registry } from "#/configurations/open-api-docs";
+
+const UserSchema = registry.register(
+  "User",
+  z.object({
+    id: z.string().openapi({ example: "usr_123" }),
+    name: z.string().openapi({ example: "Alice" }),
+  })
+);
+
+registry.registerPath({
+  method: "get",
+  path: "/user",
+  summary: "Get user by ID",
+  responses: {
+    200: {
+      description: "User details",
+      content: { "application/json": { schema: UserSchema } },
+    },
+  },
+});
+
+export default async (_: Request, res: Response) => {
+  res.json({ id: "usr_123", name: "Alice" });
+};
+```
+
+Then bind it in the router and mount it:
+
+```ts
+// src/router/user/index.ts
+import { Router } from "express";
+import getUser from "#/router/user/get";
+
+const router = Router();
+router.route("/user").get(getUser);
+export default router;
+```
+
+```ts
+// src/router/index.ts
+import userRouter from "#/router/user/index";
+router.use(userRouter);
+```
+
+For request-body or param validation, pair the handler with `express-zod-safe` (already a dependency) so invalid input is rejected with a `ZodError` before your logic runs.
+
+---
+
+## File uploads
+
+`src/configurations/muletr.ts` exports a pre-configured Multer instance:
+
+- **Memory storage** — files arrive as `req.file.buffer` (no disk writes by default).
+- **1 MB size limit** (`2 ** 20` bytes).
+
+Commented-out blocks show how to switch to **disk storage** (with a timestamped filename) and how to add a **MIME-type allow-list** — uncomment and adapt them to your needs.
+
+---
+
+## Production notes
+
+- Build first (`pnpm build`), then run `pnpm start` — the compiled entry is `dist/index.js`.
+- The API is mounted under **`/api`**, and any non-`/api` GET falls back to `public/index.html`, so the same server can host a single-page frontend.
+- Swagger docs are disabled in production.
+- `NODE_ENV` is set by the scripts via `cross-env`, so it behaves the same on Windows and Unix.
+- Shut the process down with `SIGINT` (Ctrl-C): the DB connection and HTTP server are closed gracefully.
+
+---
+
+## Notes and gotchas
+
+- **`pnpm-lock.yaml` is git-ignored.** For reproducible installs, you may want to commit the lockfile instead.
+- **`JWT_KEY` is doing double duty** as both the JWT secret and the session secret — fine for a template, but consider separate secrets for real deployments.
+- **`saveUninitialized: true`** means a session (and DB row) is created for every visitor, including anonymous ones. Set it to `false` if you only want sessions once something is stored.
+- The `.editorconfig` enforces 2-space indent, LF line endings, UTF-8, and a final newline — keep your editor aligned with it.
+
+---
+
+*Built as a batteries-included starting point for modern Express APIs. Prune what you don't need and make it yours.*
