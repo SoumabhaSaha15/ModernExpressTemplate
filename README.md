@@ -5,6 +5,15 @@ A production-minded **Express 5 + TypeScript + MongoDB** starter for Node.js 22+
 Stop re-assembling the same boilerplate. Clone this, drop in your `.env`, and start writing routes.
 
 ---
+## Initiate app with this command
+```bash
+  #npm
+  npx degit SoumabhaSaha15/ModernExpressTemplate
+  #pnpm
+  pnpm dlx degit SoumabhaSaha15/ModernExpressTemplate
+```
+
+---
 > # Tech-stack
 > ![tech](./public/image.png)
 ---
