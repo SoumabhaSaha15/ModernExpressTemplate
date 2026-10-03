@@ -14,9 +14,6 @@ Stop re-assembling the same boilerplate. Clone this, drop in your `.env`, and st
 ```
 
 ---
-> # Tech-stack
-> ![tech](./public/image.png)
----
 
 ## Table of contents
 
@@ -53,24 +50,54 @@ Most Express starters give you an `app.js` and a prayer. This one ships the infr
 
 ---
 
-## Tech stack
+<div align="center">
+  <table>
+    <thead>
+      <tr>
+        <th colspan="4"><h1>🧑‍💻Languages and Tools</h1></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td align="center" width="120">
+          <img src="./public/nodejs.svg" width="96" height="96" alt="Node.js" />
+        </td>
+        <td align="center" width="120">
+          <img src="./public/express.svg" width="96" height="96" alt="Express.js" />
+        </td>
+        <td align="center" width="120">
+          <img src="./public/typescript.svg" width="96" height="96" alt="TypeScript" />
+        </td>
+        <td align="center" width="120">
+          <img src="./public/mongodb.svg" width="96" height="96" alt="MongoDB" />
+        </td>
+      </tr>
+      <tr>
+        <td align="center" width="120">
+          <img src="./public/mongoose.svg" width="96" height="96" alt="Mongoose.js" />
+        </td>
+        <td align="center" width="120">
+          <img src="./public/zod.svg" width="96" height="96" alt="Zod" />
+        </td>
+        <td align="center" width="120">
+          <img src="./public/dotenv.svg" width="96" height="96" alt=".ENV" />
+        </td>
+        <td align="center" width="120">
+          <img src="./public/eslint.svg" width="96" height="96" alt="eslint" />
+        </td>
+      </tr>
+      <tr>
+        <td align="center" width="120" colspan="2">
+          <img src="./public/swagger.svg" width="96" height="96" alt="Swagger.js" />
+        </td>
+        <td align="center" width="120" colspan="2">
+          <img src="./public/openapiinitiative.svg" width="96" height="96" alt="OpenApi" />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
-| Concern | Choice |
-| --- | --- |
-| Runtime | Node.js 22+ |
-| Language | TypeScript 6 (`strict`, ESNext, native ESM) |
-| Framework | Express 5 |
-| Database | MongoDB via Mongoose 9 (`mongodb` driver 7) |
-| Validation | Zod 4 |
-| API docs | `@asteasolutions/zod-to-openapi` + `swagger-ui-express` (+ `swagger-themes`) |
-| Config | `@t3-oss/env-core` + `dotenv` |
-| Sessions | `express-session` + `connect-mongo` (MongoDB store) |
-| CSRF | `csrf-sync` |
-| File uploads | `multer` (memory storage, 1 MB cap) |
-| Logging | `morgan` (HTTP) + `chalk` / `boxen` (startup banner) |
-| Linting | ESLint 10 (flat config) + `typescript-eslint` |
-| Package manager | pnpm 12 |
-| Dev runner | `tsx` (watch + inspector) |
 
 ---
 
