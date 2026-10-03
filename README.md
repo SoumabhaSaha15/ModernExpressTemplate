@@ -54,7 +54,7 @@ Most Express starters give you an `app.js` and a prayer. This one ships the infr
   <table>
     <thead>
       <tr>
-        <th colspan="4"><h1>🧑‍💻Languages and Tools</h1></th>
+        <th colspan="4"><h1>Libraries and Tools</h1></th>
       </tr>
     </thead>
     <tbody>
